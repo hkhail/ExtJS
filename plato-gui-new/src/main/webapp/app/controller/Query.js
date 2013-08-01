@@ -1,6 +1,6 @@
 Ext.define( 'Plato.controller.Query', {
     extend: 'Plato.controller.Base',
-    stores : ['Documents','Dossiers'],
+    stores : ['Documents','Dossiers','Procedures'],
     models: ['Document','Dossier'],
     views: [
         'query.Form',
@@ -35,10 +35,21 @@ Ext.define( 'Plato.controller.Query', {
                     click: this.queryformsubmitprocedures
                 },'grid[xtype=query.list]' : {
                 	cellclick  : this.test
+                },'panel[xtype=tab.procedure.form] toolbar button': {
+                    click: this.displayButton
                 }
             },
             global: {}
         });
+    },
+    displayButton : function(item, e, opts) {
+    	 var me = this,
+    	 	toolbar = item.up('toolbar'),
+    	 	items = toolbar.query('button');
+    	 items.forEach(function(item) {
+    		item.setVisible(item.isHidden());
+    	 });
+    	 //toolbar.doLayout(); 
     },
     test : function(table, td, cellIndex, record, tr, rowIndex, e, eOpts) {
     	var me 		= this,
@@ -46,14 +57,34 @@ Ext.define( 'Plato.controller.Query', {
     		tabPanel = center.down('tabpanel'),
     		grid 	= me.getQuerylist(),
     		/* get the column clicked */
-    		column 	= grid.getView().getHeaderCt().getHeaderAtIndex(cellIndex);
+    		column 	= grid.getView().getHeaderCt().getHeaderAtIndex(cellIndex),
+    		procId  = record.data.procedures;
     	
-    	/* */
-    	console.log('column clicked', column.itemId);
+    	var procedure = Ext.ModelManager.getModel('Plato.model.Procedure');
     	
-    	tabPanel.add({
-            xtype: 'tab.procedure.form'
-        });
+    	procedure.load('',{
+    		success : function(proc) {
+    			console.log(proc);
+    			var gridStore = Ext.create('Ext.data.Store', {
+    				fields : [ 'dossier', 'reading', 'role', 'fdrNumber', 'docId', 'version', 'docType', 'fdrStatus','pageCount','originaLang','priorityLang','submissionDate','deadlineDate'],
+    				data : proc.data.gridBeans
+    			});
+    			var tab = tabPanel.add({
+    	    		xtype: 'tab.procedure.form',
+    	    		title: procId
+    	        });
+    	    	tabPanel.setActiveTab(tab);
+    			var grid = tab.down('gridpanel');
+    			var form = tab.down('form').getForm();
+    			form.loadRecord(proc);
+    			grid.reconfigure(gridStore);
+    		},
+    		failure : function(proc) {
+    			console.log(proc);
+    		}
+    	});
+    	
+    	
     	
     },
     queryformsubmitdocuments : function(button) {
@@ -114,8 +145,7 @@ Ext.define( 'Plato.controller.Query', {
 		},{
 			xtype : 'gridcolumn',
 			dataIndex : 'titles',
-			text : 'Title',
-			width : 300
+			text : 'Title'
 		},{
 			xtype : 'gridcolumn',
 			dataIndex : 'comments',

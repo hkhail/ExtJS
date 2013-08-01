@@ -13,6 +13,9 @@
 		src="../cdn-extjs/extjs-4.2.1-gpl/ext-all-debug.js"></script>
 	
 	<link rel="stylesheet" type="text/css" 
+		href="resources/css/boxselect.css" />
+	
+	<link rel="stylesheet" type="text/css" 
 		href="resources/css/style.css" />
 	
 	<script type="text/javascript" 
